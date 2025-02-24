@@ -1,0 +1,11 @@
+go 1.21.9
+
+use (
+	./app/cart
+	./app/frontend
+	./app/product
+	./app/user
+	./demo/demo_proto
+	./demo/demo_thrift
+	./hello_world
+)
