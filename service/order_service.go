@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"order_service/dao"
 	"order_service/model"
 	"time"
@@ -10,7 +11,7 @@ import (
 
 type OrderService struct{}
 
-// 创建订单
+// PlaceOrder creates a new order
 func (s *OrderService) PlaceOrder(userID int64, items []model.OrderItem) (*model.Order, error) {
 	order := &model.Order{
 		UserID:      userID,
@@ -19,34 +20,44 @@ func (s *OrderService) PlaceOrder(userID int64, items []model.OrderItem) (*model
 		UpdatedAt:   time.Now(),
 	}
 
-	// 使用事务确保数据一致性
+	// Use transaction to ensure data consistency
 	return order, dao.DB.Transaction(func(tx *gorm.DB) error {
-		// 创建订单
+		// Create order
 		if err := tx.Create(order).Error; err != nil {
-			return err
+			return fmt.Errorf("failed to create order: %w", err)
 		}
 
-		// 创建订单项
+		// Create order items
 		for i := range items {
 			items[i].OrderID = order.OrderID
 			if err := tx.Create(&items[i]).Error; err != nil {
-				return err
+				return fmt.Errorf("failed to create order item: %w", err)
 			}
 		}
 		return nil
 	})
 }
 
-// 查询订单列表
+// ListOrders retrieves orders for a given user ID
 func (s *OrderService) ListOrders(userID int64) ([]model.Order, error) {
 	var orders []model.Order
-	err := dao.DB.Where("user_id = ?", userID).Find(&orders).Error
-	return orders, err
+	result := dao.DB.Where("user_id = ?", userID).Find(&orders)
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to list orders for user %d: %w", userID, result.Error)
+	}
+	return orders, nil
 }
 
-// 标记订单已支付
+// MarkOrderPaid updates the order status to paid
 func (s *OrderService) MarkOrderPaid(orderID int64) error {
-	return dao.DB.Model(&model.Order{}).
+	result := dao.DB.Model(&model.Order{}).
 		Where("order_id = ?", orderID).
-		Update("order_status", "paid").Error
+		Update("order_status", "paid")
+	if result.Error != nil {
+		return fmt.Errorf("failed to mark order %d as paid: %w", orderID, result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("order %d not found", orderID)
+	}
+	return nil
 }
