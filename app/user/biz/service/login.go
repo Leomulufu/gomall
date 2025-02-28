@@ -43,5 +43,21 @@ func (s *LoginService) Run(req *user.LoginReq) (resp *user.LoginResp, err error)
 	if err != nil {
 		return
 	}
-	return &user.LoginResp{UserId: int32(userRow.ID)}, nil
+	// 初始化认证服务并生成JWT令牌
+	authService := NewAuthService(s.ctx)
+	token, err := authService.GenerateToken(int(userRow.ID))
+	if err != nil {
+		return nil, err
+	}
+	// 输出 JWT 令牌到日志
+	klog.Infof("Generated JWT Token: %s", token)
+
+	// 返回登录响应和JWT令牌
+	resp = &user.LoginResp{
+		UserId: int32(userRow.ID),
+		Token:  token, // 假设 LoginResp 结构中有 Token 字段
+	}
+
+	return resp, nil
+	//return &user.LoginResp{UserId: int32(userRow.ID)}, nil
 }
