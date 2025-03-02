@@ -46,3 +46,28 @@ message SearchProductsReq {
 message SearchProductsResp {
   repeated Product results = 1;
 }
+
+message CreateProductReq {
+    string name = 1;
+    string description = 2;
+    string picture = 3;
+    float price = 4;
+    repeated string categories = 5; // 商品所属的分类
+}
+
+message CreateProductResp {
+    uint32 product_id = 1; // 创建成功后返回的商品 ID
+}
+
+message UpdateProductReq {
+    uint32 id = 1; // 需要修改的商品 ID
+    string name = 2;
+    string description = 3;
+    string picture = 4;
+    float price = 5;
+    repeated string categories = 6; // 商品所属的分类
+}
+
+message UpdateProductResp {
+    bool success = 1; // 修改是否成功
+}
