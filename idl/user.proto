@@ -26,4 +26,5 @@ message LoginReq {
 
 message LoginResp {
     int32 user_id = 1;
+    string Token = 2; // 新增字段
 }
